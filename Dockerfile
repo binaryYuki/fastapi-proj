@@ -8,7 +8,7 @@ RUN apt-get update -y && apt-get install -y \
     default-libmysqlclient-dev
 
 
-RUN apt-get install pkg-config
+RUN apt-get install pkg-config -y
 
 RUN pip3 install --upgrade pip
 RUN pip3 install mysqlclient
