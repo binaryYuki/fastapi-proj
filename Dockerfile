@@ -5,7 +5,7 @@ RUN apt-get update -y && apt-get install -y \
     apt-transport-https \
     python3 \
     python3-pip \
-    default-libmysqlclient-dev \
+    default-libmysqlclient-dev
 
 
 RUN apt-get install python3-dev default-libmysqlclient-dev build-essential -y
