@@ -141,5 +141,48 @@ async def root(request: Request):
     )
 
 
+# ssl证书验证问题
+@app.get("/.well-known/pki-validation/{file_name}")
+async def ssl_verify(request: Request, file_name: str):
+    # 读取文件名 尝试返回文件内容
+    try:
+        logging.info(f"request_id={request.state.request_id} file_name={file_name}")
+        logging.info(f"ssl verify file request" + "file_name", file_name)
+        with open(f"./.well-known/pki-validation/{file_name}", "r") as f:
+            content = f.read()
+        return Response(
+            status_code=200,
+            content=content
+        )
+    except FileNotFoundError:
+        response = res.ErrorHandler(request_id=request.state.request_id, code=404, status="error", msg="")
+        logging.error(f"request_id={request.state.request_id} error={response}")
+        return Response(
+            status_code=405,
+            content=response.model_dump_json(exclude_none=True, by_alias=True, exclude_unset=True)
+        )
+
+
+@app.get("/.well-known/{path}")
+async def ssl_verify(request: Request, path: str):
+    # 读取文件名 尝试返回文件内容
+    try:
+        logging.info(f"request_id={request.state.request_id} file_name={path}")
+        logging.info(f"ssl verify file request" + "file_name", path)
+        with open(f"./.well-known/{path}", "r") as f:
+            content = f.read()
+        return Response(
+            status_code=200,
+            content=content
+        )
+    except FileNotFoundError:
+        response = res.ErrorHandler(request_id=request.state.request_id, code=404, status="error", msg="")
+        logging.error(f"request_id={request.state.request_id} error={response}")
+        return Response(
+            status_code=405,
+            content=response.model_dump_json(exclude_none=True, by_alias=True, exclude_unset=True)
+        )
+
+
 if __name__ == '__main__':
     uvicorn.run(app, host="0.0.0.0", port=80, log_level="info", lifespan="on", loop="asyncio", use_colors=True)
