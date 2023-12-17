@@ -60,10 +60,13 @@ class BaseResponse(BaseModel):
         :param result: 返回结果
         :return: data
         """
-        if result is None:
-            return None
-        else:
-            return result
+        match result:
+            case str():
+                return result
+            case dict():
+                return result
+            case None:
+                return None
 
     def __init__(self, request_id: str, status: str, result: Union[str, dict], code: int = 200,
                  msg: Optional[str] = None):

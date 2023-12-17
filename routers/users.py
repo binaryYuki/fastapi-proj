@@ -3,7 +3,9 @@ import logging
 import os
 import sys
 import uuid
-from typing import Optional, Union
+from datetime import datetime, timedelta
+from typing import Any, Optional, Union
+from jose import jwt
 from pydantic import BaseModel, field_validator, ValidationError
 from starlette.responses import Response
 from utils import responses_serializer as res
@@ -19,6 +21,7 @@ logging.getLogger().setLevel(logging.INFO)
 logging.debug("debug")
 
 
+
 class UsernamePasswordVerify(object):
     def __init__(self, username: str, password: str):
         self.username = username
@@ -29,7 +32,7 @@ class UsernamePasswordVerify(object):
         sql = f"SELECT * from user where username = '{self.username}'"
         obj = exec_base_sql_order(sql).exec_sql()
         try:
-           obj = obj[3]
+            obj = obj[3]
         except:
             raise ValueError("Invalid username")
         if obj:
@@ -84,7 +87,8 @@ async def get_user_info(param: GetUserRequestModel, request: Request = None) -> 
             content=response.model_dump_json(exclude_none=True, by_alias=True, exclude_unset=True)
         )
     else:
-        response = res.ErrorHandler(request_id=request.state.request_id, code=10320, status="error", msg="Result Not Found")
+        response = res.ErrorHandler(request_id=request.state.request_id, code=10320, status="error",
+                                    msg="Result Not Found")
         return Response(
             status_code=404,
             content=response.model_dump_json(exclude_none=True, by_alias=True, exclude_unset=True)
@@ -104,7 +108,7 @@ class VerifyUserInfo(BaseModel):
         }
 
 
-@router.post(path="/user/verify", tags=["users"], summary="验证用户信息", description="验证用户信息",
+@router.post(path="/user/login", tags=["users"], summary="用户登录", description="用户登录",
              response_model=res.BaseResponse)
 async def verify_user_info(param: VerifyUserInfo, request: Request = None) -> Union[Response, Response]:
     """
@@ -133,7 +137,10 @@ async def verify_user_info(param: VerifyUserInfo, request: Request = None) -> Un
             content=response.model_dump_json(exclude_none=True, by_alias=True, exclude_unset=True)
         )
     if f:
-        response = res.BaseResponse(request_id=request.state.request_id, status="ok", result="success")
+        sql = f"SELECT * from user where username = '{param.username}'"
+        obj = exec_base_sql_order(sql, 'user_model_serializers').exec_sql()
+        result = obj
+        response = res.BaseResponse(request_id=request.state.request_id, status="ok", msg="success", result=result)
         return Response(
             status_code=200,
             content=response.model_dump_json(exclude_none=True, by_alias=True, exclude_unset=True)
@@ -145,3 +152,43 @@ async def verify_user_info(param: VerifyUserInfo, request: Request = None) -> Un
             status_code=404,
             content=response.model_dump_json(exclude_none=True, by_alias=True, exclude_unset=True)
         )
+
+
+class Token(BaseModel):
+    user_id: str
+    access_token: str
+    token_type: str
+
+
+class GenerateTokenData(BaseModel):
+    username: str
+    password: str
+    expires_delta: int
+
+
+@router.post("/token/generate", response_model=Token)
+def create_access_token(data: GenerateTokenData, request: Request):
+    Algorithm = "HS256"
+    SECRET_KEY = "kxs7qyv=@&scg$k75@(ri+mn8%57_@$nl==kcz_gagqs7j5r1y"
+    verify_user_info(data.username, data.password)
+    to_encode = data.model_copy()
+    if data.expires_delta:
+        expire = datetime.utcnow() + timedelta(data.expires_delta)
+    else:
+        if type(data.expires_delta) is int:
+            expire = datetime.utcnow() + timedelta(seconds=data.expires_delta)
+        elif type(data.expires_delta) is float:
+                expire = datetime.utcnow() + timedelta(seconds=int(data.expires_delta))
+        else:
+            expire = datetime.utcnow() + timedelta(seconds=300)
+        expire = datetime.utcnow() + timedelta(expire)
+    # to_encode.update({"exp": expire}) # 过期时间
+    encoded_jwt = jwt.encode(claims={"time_claim": str(datetime.now())}, key=SECRET_KEY, algorithm=Algorithm)
+    response = res.BaseResponse(request_id=request.state.request_id, status="ok", msg=f"expires: {expire}",
+                                result=encoded_jwt)
+    # 设置cookie
+    return Response(
+        status_code=200,
+        content=response.model_dump_json(exclude_none=True, by_alias=True, exclude_unset=True),
+        headers={"Set-Cookie": f"token={encoded_jwt}; Path=/; Expires={expire}; HttpOnly"}
+    )

@@ -1,16 +1,14 @@
 import json
 import os
 import sys
-import uuid
 from os import environ
 import redis.asyncio as redis
 import uvicorn
-from fastapi import Depends, FastAPI
-from fastapi.exceptions import RequestValidationError
+from fastapi import Depends
 from fastapi_limiter import FastAPILimiter
 from fastapi_limiter.depends import RateLimiter
 from pydantic import ValidationError
-from starlette import status
+from utils.middleware import LogRequestsMiddleware
 from routers import users
 from starlette.requests import Request
 from tzlocal import get_localzone_name
@@ -56,27 +54,10 @@ async def startup_event():
 
 
 # todo: 转换为生产环境时，需要将下面的注释去掉
-# app.add_middleware(HTTPSRedirectMiddleware)
+# app.add_middleware(HTTPSRedirectMiddleware)  # 强制转换为https
+app.add_middleware(LogRequestsMiddleware)
 
 
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    request.state.request_id = ''.join(uuid.uuid4().hex[:16])
-    start_time = datetime.now()
-
-    response = await call_next(request)
-
-    process_time = (datetime.now() - start_time).total_seconds() * 1000
-    formatted_process_time = '{0:.2f}'.format(process_time)
-    logger.info(
-        f"request_id={request.state.request_id} completed_in={formatted_process_time}ms status_code={response.status_code}")
-    response.headers["X-Process-Time"] = str(formatted_process_time)
-    response.headers["X-Request-ID"] = str(request.state.request_id)
-
-    return response
-
-
-@app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     errors = exc.errors()
     info = None
@@ -99,6 +80,9 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         status_code=400,
         content=info.model_dump_json(exclude_none=True, by_alias=True, exclude_unset=True)
     )
+
+
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
 
 @app.exception_handler(StarletteHTTPException)
