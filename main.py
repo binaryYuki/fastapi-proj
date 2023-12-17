@@ -51,11 +51,10 @@ async def init_while_startup():
 @app.on_event("startup")
 async def startup_event():
     await init_while_startup()
-
-
-# todo: 转换为生产环境时，需要将下面的注释去掉
-# app.add_middleware(HTTPSRedirectMiddleware)  # 强制转换为https
-app.add_middleware(LogRequestsMiddleware)
+    if os.environ.get("DEPLOYMENT") == 1:
+        logging.info("running in production mode")
+        app.add_middleware(HTTPSRedirectMiddleware)  # 强制转换为https
+    app.add_middleware(LogRequestsMiddleware)
 
 
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -141,4 +140,4 @@ async def root(request: Request):
 
 
 if __name__ == '__main__':
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info", lifespan="on", loop="asyncio", use_colors=True)
+    uvicorn.run(app, host="0.0.0.0", port=80, log_level="info", lifespan="on", loop="asyncio", use_colors=True)
