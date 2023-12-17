@@ -156,7 +156,8 @@ async def ssl_verify(request: Request, file_name: str):
         )
     except FileNotFoundError:
         response = res.ErrorHandler(request_id=request.state.request_id, code=404, status="error", msg="")
-        logging.error(f"request_id={request.state.request_id} error={response}")
+        print(response)
+        print("request_path", request.url.path)
         return Response(
             status_code=405,
             content=response.model_dump_json(exclude_none=True, by_alias=True, exclude_unset=True)
@@ -167,8 +168,8 @@ async def ssl_verify(request: Request, file_name: str):
 async def ssl_verify(request: Request, path: str):
     # 读取文件名 尝试返回文件内容
     try:
-        logging.info(f"request_id={request.state.request_id} file_name={path}")
-        logging.info(f"ssl verify file request" + "file_name", path)
+        print(f"request_id={request.state.request_id} file_name={path}")
+        print(f"ssl verify file request" + "file_name", path)
         with open(f"./.well-known/{path}", "r") as f:
             content = f.read()
         return Response(
