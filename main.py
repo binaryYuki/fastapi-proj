@@ -132,6 +132,24 @@ async def health(request: Request):
     )
 
 
+@app.get("/favicon.ico")
+async def favicon(request: Request):
+    try:
+        logging.info(f"request_id={request.state.request_id} favicon.ico")
+        with open("./static/favicon.ico", "rb") as f:
+            content = f.read()
+        return Response(
+            status_code=200,
+            content=content
+        )
+    except FileNotFoundError:
+        response = res.ErrorHandler(request_id=request.state.request_id, code=404, status="error", msg="")
+        logging.error(f"request_id={request.state.request_id} error={response}")
+        return Response(
+            status_code=405,
+            content=response.model_dump_json(exclude_none=True, by_alias=True, exclude_unset=True)
+        )
+
 @app.get("/")
 async def root(request: Request):
     response = res.ErrorHandler(request_id=request.state.request_id, code=404, status="error", msg="")

@@ -25,8 +25,7 @@ class LogRequestsMiddleware(BaseHTTPMiddleware):
         process_time = (datetime.now() - start_time).total_seconds() * 1000
         formatted_process_time = '{0:.2f}'.format(process_time)
         logging.info(
-            f"request_path={request.url.path} request_method={request.method} request_headers={request.headers} "
-            f"request_body={request.body}")
+            f"request_id={request.state.request_id} process_time={formatted_process_time}ms path={request.url.path} ")
         response.headers["X-Process-Time"] = str(formatted_process_time)
         response.headers["X-Request-ID"] = str(request.state.request_id)
 
