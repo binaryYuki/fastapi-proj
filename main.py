@@ -51,10 +51,12 @@ async def init_while_startup():
 @app.on_event("startup")
 async def startup_event():
     await init_while_startup()
-    if os.environ.get("DEPLOYMENT") == 1:
-        logging.info("running in production mode")
-        app.add_middleware(HTTPSRedirectMiddleware)  # 强制转换为https
-    app.add_middleware(LogRequestsMiddleware)
+
+
+if os.environ.get("DEPLOYMENT") == 1:
+    logging.info("running in production mode")
+    app.add_middleware(HTTPSRedirectMiddleware)  # 强制转换为https
+app.add_middleware(LogRequestsMiddleware)
 
 
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
