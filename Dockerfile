@@ -31,7 +31,7 @@ CMD ["ln", "-s", "/usr/share/nginx/modules-available/mod-http-headers-more-filte
 
 RUN nginx -t
 
-RUN systemctl restart nginx
+CMD ["service", "nginx", "restart"]
 
 # 设置 Nginx 配置
 COPY nginx.conf /etc/nginx/nginx.conf
