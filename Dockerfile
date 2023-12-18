@@ -27,11 +27,11 @@ RUN apt-get update && apt-get install -y nginx
 
 CMD ["bash", "-c", "service nginx start"]
 
-RUN sudo apt-get install -y libnginx-mod-http-headers-more-filter
+RUN apt-get install -y libnginx-mod-http-headers-more-filter
 
-RUN sudo ln -s /usr/share/nginx/modules-available/mod-http-headers-more-filter.load /etc/nginx/modules-enabled/
+RUN ln -s /usr/share/nginx/modules-available/mod-http-headers-more-filter.load /etc/nginx/modules-enabled/
 
-RUN sudo systemctl restart nginx
+RUN systemctl restart nginx
 
 # 设置 Nginx 配置
 COPY nginx.conf /etc/nginx/nginx.conf
