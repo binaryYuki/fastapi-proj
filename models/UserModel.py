@@ -1,3 +1,4 @@
+import os
 import uuid
 from os import environ
 from typing import Optional
@@ -52,14 +53,7 @@ default_root_user = User(
     APIKEY_ENABLED=False,
     APIKEY_EXPIRATION="",
 )
-
-# create the database
-if environ.get("SQLALCHEMY_ECHO") == "True":
-    engine = create_engine(environ.get("DATABASE_URL"), echo=True)
-else:
-    engine = create_engine(environ.get("DATABASE_URL"))
-
-SQLModel.metadata.create_all(engine)
+engine = create_engine(environ.get("DATABASE_URL"))
 
 
 async def create_root_user():
@@ -150,6 +144,8 @@ class exec_base_sql_order(object):
                 "APIKEY": result[13],
                 "APIKEY_ENABLED": result[14],
                 "APIKEY_EXPIRATION": result[15],
+                # "GPTAC_ALLOWED": result[16],
+                # "GPTAC_EXPIRATION": result[17],
             }
 
     def exec_sql(self):
@@ -165,3 +161,37 @@ class exec_base_sql_order(object):
             else:
                 return result
 
+
+async def create_user(user: User):
+    """
+    创建用户 只对User模型有效
+    :caution: 请勿在此处使用logging NOT TESTED YET!!
+    :param user: User模型
+    UserModelParam:
+        id=user_id_generator(),
+        avatar
+        username
+        password=crypto.encrypt_password(password),
+        email
+        role
+        is_active=True,
+        APP_NAME="",
+        APP_ID="",
+        APP_SECRET="",
+        APP_URL="",
+        APP_ENABLED=False,
+        APIKEY="",
+        APIKEY_ENABLED=False,
+        APIKEY_EXPIRATION="",
+    :return: Traceback
+    """
+    try:
+        with Session(engine) as session:
+            session.add(user)
+            session.commit()
+            session.refresh(user)
+            logging.info("created user %s" % user.username)
+    except Exception as e:
+        logging.critical("failed when creating user %s" % user.username)
+        logging.critical("please check your database connection")
+        logging.critical('error traceback: %s' % e)

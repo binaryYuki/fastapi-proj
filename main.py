@@ -1,4 +1,3 @@
-import json
 import os
 import sys
 from os import environ
@@ -8,21 +7,23 @@ from fastapi import Depends
 from fastapi_limiter import FastAPILimiter
 from fastapi_limiter.depends import RateLimiter
 from pydantic import ValidationError
+from routers.gptac import router
+import models.main
 from utils.middleware import LogRequestsMiddleware
 from routers import users
 from starlette.requests import Request
 from tzlocal import get_localzone_name
 from datetime import datetime
 import utils.responses_serializer as res
-from starlette.responses import JSONResponse, Response
+from starlette.responses import Response
 from dotenv import load_dotenv
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware  # 强制转换为https
-import logger
-from models import create_root_user
+from models.UserModel import create_root_user
 from logging import getLogger
 from fastapi import FastAPI
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.exceptions import RequestValidationError
+from models.GptacUserModel import init_gpatc
 
 load_dotenv()
 
@@ -31,19 +32,18 @@ logging = getLogger(__name__)
 app = FastAPI()
 
 app.include_router(users.router, prefix="/api/v1")
+app.include_router(router)
 
 
 async def init_while_startup():
     try:
-        await create_root_user()
+        await models.main.main()
     except Exception as e:
-        logging.critical("failed when initializing root user")
-        logging.error('error traceback: %s' % e)
-        sys.exit("The server failed to start, please check your database connection")
-        # todo: redis流控
+        sys.exit(f"initial db failed, error: {e}"), -1
     try:
         redis1 = redis.from_url(os.environ.get("REDIS_URL"), encoding="utf-8", decode_responses=True)
         await FastAPILimiter.init(redis1)
+        print("redis init success")
     except Exception as e:
         print(e)
 
@@ -149,6 +149,7 @@ async def favicon(request: Request):
             status_code=405,
             content=response.model_dump_json(exclude_none=True, by_alias=True, exclude_unset=True)
         )
+
 
 @app.get("/")
 async def root(request: Request):

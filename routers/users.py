@@ -1,25 +1,20 @@
-import json
 import logging
-import os
-import sys
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Optional, Union
+from typing import Union
 from jose import jwt
-from pydantic import BaseModel, field_validator, ValidationError
+from pydantic import BaseModel, field_validator
 from starlette.responses import Response
 from utils import responses_serializer as res
 from fastapi import APIRouter
 from starlette.requests import Request
-from models import exec_base_sql_order
+from models.UserModel import exec_base_sql_order
 from utils import crypto
-from utils.crypto import encrypt_password
 
 router = APIRouter()
 
 logging.getLogger().setLevel(logging.INFO)
 logging.debug("debug")
-
 
 
 class UsernamePasswordVerify(object):
@@ -28,7 +23,6 @@ class UsernamePasswordVerify(object):
         self.password = password
 
     def verify(self):
-        logging.info(f"username: {self.username}, password: {self.password}")
         sql = f"SELECT * from user where username = '{self.username}'"
         obj = exec_base_sql_order(sql).exec_sql()
         try:
@@ -36,7 +30,6 @@ class UsernamePasswordVerify(object):
         except:
             raise ValueError("Invalid username")
         if obj:
-            logging.info(obj)
             if crypto.verify_password(self.password, bytes(obj, encoding="utf-8")):
                 return True
         else:
@@ -178,7 +171,7 @@ def create_access_token(data: GenerateTokenData, request: Request):
         if type(data.expires_delta) is int:
             expire = datetime.utcnow() + timedelta(seconds=data.expires_delta)
         elif type(data.expires_delta) is float:
-                expire = datetime.utcnow() + timedelta(seconds=int(data.expires_delta))
+            expire = datetime.utcnow() + timedelta(seconds=int(data.expires_delta))
         else:
             expire = datetime.utcnow() + timedelta(seconds=300)
         expire = datetime.utcnow() + timedelta(expire)

@@ -47,11 +47,19 @@ class ErrorHandler(BaseModel):
 
 
 class BaseResponse(BaseModel):
+    """
+    基础返回json
+    :param request_id: 请求id
+    :param code: 响应码
+    :param status: 状态
+    :param msg: 响应信息 --> str
+    :param data: 响应数据 --> dict
+    """
     request_id: str
     code: int
     status: str
     msg: Optional[str]
-    data: Optional[Any]
+    data: Optional[dict]
 
     @staticmethod
     def define_data(result: Any) -> Any:
