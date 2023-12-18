@@ -32,6 +32,6 @@ COPY nginx.conf /etc/nginx/nginx.conf
 EXPOSE 80
 
 # 启动 FastAPI 应用和 Nginx
-CMD ["bash", "-c", "service nginx start && uvicorn main:app --host 0.0.0.0 --port 80"]
+CMD ["bash", "-c", "service nginx start && uvicorn main:app --host 0.0.0.0 --port 8080"]
 
 #CMD ["gunicorn", "main:app", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:80"]
