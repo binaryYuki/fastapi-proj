@@ -29,8 +29,6 @@ RUN apt-get install -y libnginx-mod-http-headers-more-filter
 
 CMD ["ln", "-s", "/usr/share/nginx/modules-available/mod-http-headers-more-filter.load", "/etc/nginx/modules-enabled/"]
 
-RUN nginx -t
-
 CMD ["service", "nginx", "restart"]
 
 # 设置 Nginx 配置
