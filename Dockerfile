@@ -27,12 +27,11 @@ RUN apt-get update && apt-get install -y nginx
 
 RUN apt-get install -y libnginx-mod-http-headers-more-filter
 
-CMD ["ln", "-s", "/usr/share/nginx/modules-available/mod-http-headers-more-filter.load", "/etc/nginx/modules-enabled/"]
-
-CMD ["service", "nginx", "restart"]
-
 # 设置 Nginx 配置
 COPY nginx.conf /etc/nginx/nginx.conf
+
+CMD ["systemctl", "enable", "nginx"]
+CMD ["systemctl", "stop", "nginx"]
 
 # 暴露 Nginx 端口
 EXPOSE 8000
