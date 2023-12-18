@@ -20,6 +20,18 @@ RUN pip3 install -r requirements.txt
 
 # Copy the current directory contents into the container at /app
 # open port 8000
-EXPOSE 8000
+EXPOSE 80
 
-CMD ["gunicorn", "main:app", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:80"]
+# 安装 Nginx
+RUN apt-get update && apt-get install -y nginx
+
+# 设置 Nginx 配置
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# 暴露 Nginx 端口
+EXPOSE 80
+
+# 启动 FastAPI 应用和 Nginx
+CMD ["bash", "-c", "service nginx start && uvicorn app.main:app --host 0.0.0.0 --port 80"]
+
+#CMD ["gunicorn", "main:app", "--workers", "4", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:80"]
