@@ -26,6 +26,7 @@ class LogRequestsMiddleware(BaseHTTPMiddleware):
         formatted_process_time = '{0:.2f}'.format(process_time)
         logging.info(
             f"request_id={request.state.request_id} process_time={formatted_process_time}ms path={request.url.path} ")
+        response.headers["X-Powered-By"] = "Binary-Yuki"
         response.headers["X-Process-Time"] = str(formatted_process_time)
         response.headers["X-Request-ID"] = str(request.state.request_id)
 
