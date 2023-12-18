@@ -35,7 +35,7 @@ CMD ["service", "nginx", "restart"]
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # 暴露 Nginx 端口
-EXPOSE 80
+EXPOSE 8000
 
 # 启动 FastAPI 应用和 Nginx
 CMD ["bash", "-c", "service nginx start && uvicorn main:app --host 0.0.0.0 --port 8080"]
